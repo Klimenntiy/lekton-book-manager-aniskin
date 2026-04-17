@@ -109,16 +109,9 @@ public class Main {
         String authorStr = parts[1].trim();
         String yearStr = parts[2].trim();
 
-        int yearValue;
-        try {
-            yearValue = Integer.parseInt(yearStr);
-        } catch (NumberFormatException e) {
-            throw new InvalidInputException("Год должен быть целым числом");
-        }
-
         Title title = new Title(titleStr);
         Author author = new Author(authorStr);
-        Year year = new Year(yearValue);
+        Year year = new Year(yearStr);
 
         Book book = service.addBook(title, author, year);
         System.out.println("Книга добавлена: " + book);
