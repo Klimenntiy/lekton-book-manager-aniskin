@@ -1,4 +1,4 @@
-package org.example.valueobjects;
+package org.example.valueobject;
 
 import org.example.exception.InvalidInputException;
 

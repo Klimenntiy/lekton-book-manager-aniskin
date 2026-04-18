@@ -2,7 +2,7 @@ package org.example.service;
 
 import org.example.exception.*;
 import org.example.model.Book;
-import org.example.valueobjects.*;
+import org.example.valueobject.*;
 
 
 import java.util.*;

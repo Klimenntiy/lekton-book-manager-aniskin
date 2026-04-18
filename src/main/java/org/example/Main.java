@@ -3,9 +3,9 @@ package org.example;
 import org.example.exception.*;
 import org.example.model.Book;
 import org.example.service.LibraryService;
-import org.example.valueobjects.Author;
-import org.example.valueobjects.Title;
-import org.example.valueobjects.Year;
+import org.example.valueobject.Author;
+import org.example.valueobject.Title;
+import org.example.valueobject.Year;
 
 import java.util.List;
 import java.util.Scanner;
