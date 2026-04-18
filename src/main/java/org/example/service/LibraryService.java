@@ -2,42 +2,41 @@ package org.example.service;
 
 import org.example.exception.*;
 import org.example.model.Book;
-import org.example.valueobjects.Author;
-import org.example.valueobjects.Title;
-import org.example.valueobjects.Year;
+import org.example.valueobjects.*;
+
 
 import java.util.*;
 
 public class LibraryService {
 
     private final Map<Integer, Book> books = new HashMap<>();
+    private final Map<String, Integer> duplicateIndex = new HashMap<>();
     private int nextId = 1;
 
     public Book addBook(Title title, Author author, Year year) {
         String titleStr = title.value();
         String authorStr = author.value();
+        String key = (titleStr + "|" + authorStr).toLowerCase();
 
-        for (Book book : books.values()) {
-            boolean sameTitle = book.title().value().equalsIgnoreCase(titleStr);
-            boolean sameAuthor = book.author().value().equalsIgnoreCase(authorStr);
-
-            if (sameTitle && sameAuthor) {
-                throw new DuplicateBookException(titleStr, authorStr);
-            }
+        if (duplicateIndex.containsKey(key)) {
+            throw new DuplicateBookException(titleStr, authorStr);
         }
 
         Book newBook = new Book(nextId, title, author, year);
         books.put(nextId, newBook);
+        duplicateIndex.put(key, nextId);
         nextId++;
         return newBook;
     }
 
     public Book removeBook(int id) {
         Book removed = books.remove(id);
-
         if (removed == null) {
             throw new BookNotFoundException(id);
         }
+
+        String key = (removed.title().value() + "|" + removed.author().value()).toLowerCase();
+        duplicateIndex.remove(key);
 
         return removed;
     }
@@ -65,7 +64,6 @@ public class LibraryService {
             default:
                 throw new InvalidSortException(sortBy);
         }
-
         return allBooks;
     }
 
@@ -76,12 +74,10 @@ public class LibraryService {
         for (Book book : books.values()) {
             boolean matchesTitle = book.title().value().toLowerCase().contains(lowerQuery);
             boolean matchesAuthor = book.author().value().toLowerCase().contains(lowerQuery);
-
             if (matchesTitle || matchesAuthor) {
                 result.add(book);
             }
         }
-
         return result;
     }
 
@@ -90,37 +86,32 @@ public class LibraryService {
             return "Библиотека пуста.";
         }
 
-        StringBuilder stats = new StringBuilder();
-        stats.append("Всего книг: ").append(books.size()).append("\n");
-
+        int total = books.size();
         Book oldest = null;
+        Book newest = null;
+        Map<String, Integer> authorCount = new HashMap<>();
+
         for (Book book : books.values()) {
             if (oldest == null || book.year().value() < oldest.year().value()) {
                 oldest = book;
             }
-        }
-        stats.append("Самая старая книга: ").append(oldest).append("\n");
-
-        Book newest = null;
-        for (Book book : books.values()) {
             if (newest == null || book.year().value() > newest.year().value()) {
                 newest = book;
             }
-        }
-        stats.append("Самая новая книга: ").append(newest).append("\n");
 
-        Map<String, Integer> authorCount = new HashMap<>();
-        for (Book book : books.values()) {
-            String author = book.author().value();
-            int currentCount = authorCount.getOrDefault(author, 0);
-            authorCount.put(author, currentCount + 1);
+            authorCount.merge(book.author().value(), 1, Integer::sum);
         }
+
+        StringBuilder stats = new StringBuilder();
+        stats.append("Всего книг: ").append(total).append("\n");
+        stats.append("Самая старая книга: ").append(oldest).append("\n");
+        stats.append("Самая новая книга: ").append(newest).append("\n");
 
         stats.append("Топ авторов по количеству книг:\n");
         authorCount.entrySet().stream()
                 .sorted((a, b) -> b.getValue().compareTo(a.getValue()))
                 .limit(3)
-                .forEach(entry -> stats.append(" - ")
+                .forEach(entry -> stats.append("  - ")
                         .append(entry.getKey())
                         .append(": ")
                         .append(entry.getValue())
